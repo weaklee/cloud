@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}{% if user.role.value == 'subuser' %}分配的虚拟机{% else %}我的云主机{% endif %} - cloud{% endblock %}
+{% block page_title %}{% if user.role.value == 'subuser' %}分配的虚拟机{% else %}我的云主机{% endif %}{% endblock %}
+{% block content %}
+<div class="level">
+    <div><h1 class="title">{% if user.role.value == 'subuser' %}分配的虚拟机{% else %}我的云主机{% endif %}</h1><p class="subtitle">共 {{ vms|length }} 台云主机</p></div>
+    {% if user.role.value != 'subuser' %}
+    <a href="/vms/create" class="btn btn-primary"><i class="fas fa-plus"></i> 创建云主机</a>
+    {% endif %}
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap">
+    <table>
+        <thead><tr><th>名称</th><th>类型</th><th>状态</th><th>CPU</th><th>内存</th><th>磁盘</th><th>IPv6</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for vm in vms %}
+        <tr>
+            <td><strong>{{ vm.name }}</strong></td>
+            <td><span class="tag {{ 'tag-info' if vm.vm_type.value == 'incus' else 'tag-light' }}">
+                <i class="fas {{ 'fa-box' if vm.vm_type.value == 'incus' else 'fa-server' }}"></i>
+                {{ 'Incus' if vm.vm_type.value == 'incus' else 'CH' }}
+            </span></td>
+            <td>{{ status_badge(vm.status) }}</td>
+            <td>{{ vm.cpus }} 核</td>
+            <td>{{ vm.memory_mb }} MB</td>
+            <td>{{ vm.disk_gb }} GB</td>
+            <td>{% if vm.ipv6 %}<code style="font-size:12px">{{ vm.ipv6 }}</code>{% else %}-{% endif %}</td>
+            <td>{{ vm.created_at.strftime('%Y-%m-%d') }}</td>
+            <td><a href="/vms/{{ vm.id }}" class="btn btn-info btn-sm"><i class="fas fa-cog"></i> 管理</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty"><i class="fas fa-inbox"></i>{% if user.role.value == 'subuser' %}暂无分配的虚拟机{% else %}暂无云主机,点击右上角创建<a href="/vms/create" class="btn btn-primary btn-sm" style="margin-left:12px"><i class="fas fa-plus"></i> 创建</a>{% endif %}</div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

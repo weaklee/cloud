@@ -1,0 +1,18 @@
+{% macro status_badge(status) %}
+{% set v = status.value if status else '' %}
+{% if v == 'running' %}<span class="tag tag-ok"><i class="fas fa-play-circle"></i> 运行中</span>
+{% elif v == 'stopped' %}<span class="tag tag-dark"><i class="fas fa-stop-circle"></i> 已停止</span>
+{% elif v == 'error' %}<span class="tag tag-off"><i class="fas fa-exclamation-circle"></i> 异常</span>
+{% elif v == 'online' %}<span class="tag tag-ok"><i class="fas fa-circle" style="font-size:7px"></i> 在线</span>
+{% elif v == 'offline' %}<span class="tag tag-off"><i class="fas fa-circle" style="font-size:7px"></i> 离线</span>
+{% elif v == 'unknown' %}<span class="tag tag-light"><i class="fas fa-circle" style="font-size:7px"></i> 未知</span>
+{% else %}<span class="tag tag-light">{{ v }}</span>
+{% endif %}
+{% endmacro %}
+
+{% macro role_badge(role) %}
+{% if role.value == 'admin' %}<span class="tag tag-info">管理员</span>
+{% elif role.value == 'subuser' %}<span class="tag tag-warn">子账号</span>
+{% else %}<span class="tag tag-light">普通用户</span>
+{% endif %}
+{% endmacro %}

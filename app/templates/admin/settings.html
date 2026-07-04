@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}系统设置 - cloud{% endblock %}
+{% block page_title %}系统设置{% endblock %}
+{% block content %}
+<div class="level"><div><h1 class="title">系统设置</h1><p class="subtitle">站点与系统配置</p></div></div>
+<div class="card" style="max-width:640px">
+    <form method="post" action="/admin/settings">
+        <div class="field">
+            <label class="label">站点名称</label>
+            <input class="input" name="site_name" value="{{ settings.get('site_name', 'ikun-cloud') }}">
+        </div>
+        <div class="field">
+            <label class="label">允许注册</label>
+            <div class="select" style="width:100%">
+                <select name="registration_enabled" style="width:100%">
+                    <option value="true" {% if settings.get('registration_enabled') == 'true' %}selected{% endif %}>开放注册</option>
+                    <option value="false" {% if settings.get('registration_enabled') != 'true' %}selected{% endif %}>仅管理员创建</option>
+                </select>
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">默认系统镜像</label>
+            <input class="input" name="default_os_image" value="{{ settings.get('default_os_image', 'debian-12') }}">
+        </div>
+        <hr>
+        <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> 保存设置</button>
+    </form>
+</div>
+{% endblock %}

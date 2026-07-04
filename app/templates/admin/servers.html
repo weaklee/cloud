@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}宿主服务器 - cloud{% endblock %}
+{% block page_title %}宿主服务器{% endblock %}
+{% block content %}
+<div class="level">
+    <div><h1 class="title">宿主服务器</h1><p class="subtitle">共 {{ servers|length }} 台服务器</p></div>
+    <button class="btn btn-primary" onclick="openModal('createModal')"><i class="fas fa-plus"></i> 添加服务器</button>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap"><table>
+        <thead><tr><th>名称</th><th>地址</th><th>归属</th><th>状态</th><th>CPU</th><th>内存</th><th>磁盘</th><th>主机数</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for s in servers %}
+        <tr>
+            <td><strong>{{ s.name }}</strong></td>
+            <td><code>{{ s.host }}:{{ s.port }}</code></td>
+            <td>{% if s.owner %}<span class="tag tag-info">{{ s.owner.username }}</span>{% else %}<span class="tag tag-dark">公共</span>{% endif %}</td>
+            <td>{{ status_badge(s.status) }}</td>
+            <td>{{ s.cpu_cores }} 核</td>
+            <td>{{ s.memory_mb }} MB</td>
+            <td>{{ s.disk_gb }} GB</td>
+            <td>{{ s.vms|length }}</td>
+            <td>
+                <form method="post" action="/admin/servers/{{ s.id }}/check" style="display:inline"><button class="btn btn-info btn-sm"><i class="fas fa-plug"></i> 检测</button></form>
+                <form method="post" action="/admin/servers/{{ s.id }}/delete" style="display:inline" onsubmit="return confirm('确认删除服务器 {{ s.name }}?关联的云主机记录将保留但无法操作。')"><button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty"><i class="fas fa-hdd"></i>暂无服务器,点击右上角添加</div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<div class="modal" id="createModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head"><p class="modal-card-title">添加宿主服务器</p><button class="delete"></button></header>
+        <form method="post" action="/admin/servers/create">
+            <section class="modal-card-body">
+                <div class="field"><label class="label">名称</label><input class="input" name="name" placeholder="例如:node-bj-01" required></div>
+                <div class="field"><label class="label">主机地址</label><input class="input" name="host" placeholder="192.168.1.100" required></div>
+                <div class="columns">
+                    <div class="column is-6"><div class="field"><label class="label">SSH 端口</label><input class="input" type="number" name="port" value="22"></div></div>
+                    <div class="column is-6"><div class="field"><label class="label">SSH 用户</label><input class="input" name="ssh_user" value="root"></div></div>
+                </div>
+                <div class="field"><label class="label">SSH 密码</label><input class="input" type="password" name="ssh_password" placeholder="登录宿主服务器的密码" required><p class="help">用于 SSH 登录宿主服务器的密码(建议使用 root 或具备 sudo 权限的账号)</p></div>
+            </section>
+            <footer class="modal-card-foot"><button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> 添加</button><button class="btn" type="button" onclick="closeModal('createModal')">取消</button></footer>
+        </form>
+    </div>
+</div>
+{% endblock %}

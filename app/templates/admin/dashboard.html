@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}管理概览 - cloud{% endblock %}
+{% block page_title %}管理概览{% endblock %}
+{% block content %}
+<div class="level"><div><h1 class="title">管理概览</h1><p class="subtitle">系统运行状态总览</p></div></div>
+<div class="columns" style="margin-bottom:20px">
+    <div class="column is-3"><div class="stat"><div class="ic ic-blue"><i class="fas fa-users"></i></div><div><div class="v">{{ user_count }}</div><div class="l">用户总数</div></div></div></div>
+    <div class="column is-3"><div class="stat"><div class="ic ic-purple"><i class="fas fa-hdd"></i></div><div><div class="v">{{ server_count }}</div><div class="l">宿主服务器</div></div></div></div>
+    <div class="column is-3"><div class="stat"><div class="ic ic-orange"><i class="fas fa-server"></i></div><div><div class="v">{{ vm_count }}</div><div class="l">云主机总数</div></div></div></div>
+    <div class="column is-3"><div class="stat"><div class="ic ic-green"><i class="fas fa-play-circle"></i></div><div><div class="v">{{ running_vms }}</div><div class="l">运行中</div></div></div></div>
+</div>
+{% if subuser_count is defined %}
+<div class="columns" style="margin-bottom:20px">
+    <div class="column is-3"><div class="stat"><div class="ic ic-orange"><i class="fas fa-user-friends"></i></div><div><div class="v">{{ subuser_count }}</div><div class="l">子账号数</div></div></div></div>
+</div>
+{% endif %}
+<div class="columns">
+    <div class="column is-8">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-history" style="color:var(--primary)"></i> 最近操作</div>
+            <div class="tbl-wrap"><table>
+                <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>目标</th><th>IP</th></tr></thead>
+                <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="font-size:12px">{{ log.created_at.strftime('%m-%d %H:%M') }}</td>
+                    <td>{{ log.username }}</td>
+                    <td><span class="tag tag-light">{{ log.action }}</span></td>
+                    <td style="font-size:12px">{{ log.target }}</td>
+                    <td style="font-size:12px"><code>{{ log.ip_address }}</code></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5"><div class="empty"><i class="fas fa-list"></i>暂无操作记录</div></td></tr>
+                {% endfor %}
+                </tbody>
+            </table></div>
+            <div style="text-align:center;margin-top:12px"><a href="/admin/logs" class="btn btn-sm">查看全部日志 <i class="fas fa-arrow-right"></i></a></div>
+        </div>
+    </div>
+    <div class="column is-4">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-bolt" style="color:var(--primary)"></i> 快捷操作</div>
+            <a href="/admin/users" class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px"><i class="fas fa-user-plus"></i> 管理用户</a>
+            <a href="/admin/subusers" class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px"><i class="fas fa-user-friends"></i> 子账号管理</a>
+            <a href="/admin/servers" class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px"><i class="fas fa-plus"></i> 添加服务器</a>
+            <a href="/admin/announcements" class="btn" style="width:100%;justify-content:flex-start;margin-bottom:8px"><i class="fas fa-bullhorn"></i> 发布公告</a>
+            <a href="/admin/settings" class="btn" style="width:100%;justify-content:flex-start"><i class="fas fa-cog"></i> 系统设置</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}个人中心 - cloud{% endblock %}
+{% block page_title %}个人中心{% endblock %}
+{% block content %}
+<div class="level"><div><h1 class="title">个人中心</h1><p class="subtitle">管理账号信息</p></div></div>
+<div class="columns">
+    <div class="column is-4">
+        <div class="card" style="text-align:center">
+            <div style="width:72px;height:72px;margin:0 auto 16px;border-radius:50%;background:linear-gradient(135deg,#4f7cff,#7b5cff);display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff"><i class="fas fa-user"></i></div>
+            <h2 style="font-size:18px;font-weight:700">{{ user.username }}</h2>
+            <div style="margin-top:8px"><span class="tag {{ 'tag-info' if user.role == 'admin' else 'tag-light' }}">{% if user.role == 'admin' %}管理员{% else %}普通用户{% endif %}</span></div>
+            <hr>
+            <div style="color:var(--muted);font-size:13px;line-height:2">
+                <div><i class="fas fa-server"></i> 云主机数量:{{ vm_count }}</div>
+                <div><i class="fas fa-calendar"></i> 注册时间:{{ user.created_at.strftime('%Y-%m-%d') }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="column is-8">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-lock" style="color:var(--primary)"></i> 修改密码</div>
+            <form method="post" action="/profile/password" style="max-width:420px">
+                <div class="field"><label class="label">原密码</label><input class="input" type="password" name="old_password" placeholder="请输入当前密码" required></div>
+                <div class="field"><label class="label">新密码</label><input class="input" type="password" name="new_password" placeholder="至少 6 位" required></div>
+                <p class="help"><i class="fas fa-info-circle"></i> 新密码至少需要 6 个字符</p>
+                <button class="btn btn-primary" type="submit" style="margin-top:8px"><i class="fas fa-check"></i> 确认修改</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

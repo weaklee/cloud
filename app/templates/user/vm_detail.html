@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}{{ vm.name }} - cloud{% endblock %}
+{% block page_title %}{{ vm.name }}{% endblock %}
+{% block content %}
+<div style="margin-bottom:20px"><a href="/vms" class="btn btn-sm"><i class="fas fa-arrow-left"></i> 返回列表</a></div>
+<div class="level">
+    <div><h1 class="title">{{ vm.name }}</h1><p class="subtitle">
+        <span class="tag {{ 'tag-info' if vm.vm_type.value == 'incus' else 'tag-light' }}" style="margin-right:8px">
+            <i class="fas {{ 'fa-box' if vm.vm_type.value == 'incus' else 'fa-server' }}"></i>
+            {{ 'Incus 容器' if vm.vm_type.value == 'incus' else 'Cloud Hypervisor' }}
+        </span>
+        UUID:{{ vm.uuid }}
+    </p></div>
+    {{ status_badge(vm.status) }}
+</div>
+<div class="columns">
+    <div class="column is-8">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-sliders-h" style="color:var(--primary)"></i> 配置信息</div>
+            <table>
+                <tr><td style="width:30%;color:var(--muted)"><i class="fas fa-microchip"></i> CPU</td><td>{{ vm.cpus }} 核</td></tr>
+                <tr><td style="color:var(--muted)"><i class="fas fa-memory"></i> 内存</td><td>{{ vm.memory_mb }} MB</td></tr>
+                <tr><td style="color:var(--muted)"><i class="fas fa-hdd"></i> 磁盘</td><td>{{ vm.disk_gb }} GB</td></tr>
+                <tr><td style="color:var(--muted)"><i class="fas fa-compact-disc"></i> 系统镜像</td><td>{{ vm.os_image }}</td></tr>
+                <tr><td style="color:var(--muted)"><i class="fas fa-layer-group"></i> 虚拟化类型</td><td>{{ 'Incus 系统容器' if vm.vm_type.value == 'incus' else 'Cloud Hypervisor (KVM)' }}</td></tr>
+                {% if server %}<tr><td style="color:var(--muted)"><i class="fas fa-server"></i> 宿主服务器</td><td>{{ server.name }} ({{ server.host }})</td></tr>{% endif %}
+                {% if vm.internal_ip %}<tr><td style="color:var(--muted)"><i class="fas fa-network-wired"></i> 内网 IP</td><td><code>{{ vm.internal_ip }}</code></td></tr>{% endif %}
+                {% if vm.ipv6 %}<tr><td style="color:var(--muted)"><i class="fas fa-network-wired"></i> IPv6</td><td><code>{{ vm.ipv6 }}</code></td></tr>{% endif %}
+                {% if vm.ssh_port %}<tr><td style="color:var(--muted)"><i class="fas fa-terminal"></i> SSH 端口</td><td><code>{{ vm.ssh_port }}</code></td></tr>{% endif %}
+                {% if vm.password %}<tr><td style="color:var(--muted)"><i class="fas fa-key"></i> 登录密码</td><td><code>{{ vm.password }}</code></td></tr>{% endif %}
+                <tr><td style="color:var(--muted)"><i class="fas fa-calendar"></i> 创建时间</td><td>{{ vm.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i class="fas fa-project-diagram" style="color:var(--primary)"></i> 端口转发</div>
+            {% if port_forwards %}
+            <table>
+                <thead><tr><th>宿主端口</th><th>客户机端口</th><th>协议</th>{% if user.role.value != 'subuser' %}<th>操作</th>{% endif %}</tr></thead>
+                <tbody>
+                {% for pf in port_forwards %}
+                <tr>
+                    <td><code>{{ pf.host_port }}</code></td>
+                    <td><code>{{ pf.guest_port }}</code></td>
+                    <td>{{ pf.protocol|upper }}</td>
+                    {% if user.role.value != 'subuser' %}
+                    <td><form method="post" action="/vms/{{ vm.id }}/port-forward/{{ pf.id }}/delete" style="display:inline" onsubmit="return confirm('确认删除该端口转发规则?')"><button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--muted);font-size:13px;margin-bottom:16px">暂无端口转发规则。</p>
+            {% endif %}
+            {% if user.role.value != 'subuser' %}
+            <hr>
+            <form method="post" action="/vms/{{ vm.id }}/port-forward" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+                <div class="field" style="margin:0;flex:1;min-width:110px"><label class="label">宿主端口</label><input class="input" type="number" name="host_port" min="1" max="65535" placeholder="8080" required></div>
+                <div class="field" style="margin:0;flex:1;min-width:110px"><label class="label">客户机端口</label><input class="input" type="number" name="guest_port" min="1" max="65535" placeholder="80" required></div>
+                <div class="field" style="margin:0;flex:0 0 100px"><label class="label">协议</label><div class="select" style="width:100%"><select name="protocol" style="width:100%"><option value="tcp">TCP</option><option value="udp">UDP</option></select></div></div>
+                <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> 添加</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="column is-4">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-bolt" style="color:var(--primary)"></i> 电源操作</div>
+            <form method="post" action="/vms/{{ vm.id }}/start" style="margin-bottom:8px"><button class="btn btn-ok" style="width:100%;justify-content:center" type="submit" {% if vm.status.value == 'running' %}disabled{% endif %}><i class="fas fa-play"></i> 启动</button></form>
+            <form method="post" action="/vms/{{ vm.id }}/stop" style="margin-bottom:8px"><button class="btn btn-warn" style="width:100%;justify-content:center" type="submit" {% if vm.status.value != 'running' %}disabled{% endif %}><i class="fas fa-stop"></i> 停止</button></form>
+            <form method="post" action="/vms/{{ vm.id }}/restart" style="margin-bottom:8px"><button class="btn btn-info" style="width:100%;justify-content:center" type="submit" {% if vm.status.value != 'running' %}disabled{% endif %}><i class="fas fa-sync"></i> 重启</button></form>
+            {% if user.role.value != 'subuser' %}
+            <hr>
+            <details>
+                <summary style="cursor:pointer;font-weight:600;font-size:14px"><i class="fas fa-key"></i> 重置密码</summary>
+                <form method="post" action="/vms/{{ vm.id }}/reset-password" style="margin-top:12px">
+                    <div class="field" style="margin-bottom:10px"><input class="input" type="text" name="password" placeholder="输入新密码" required></div>
+                    <button class="btn btn-warn btn-sm" style="width:100%;justify-content:center" type="submit"><i class="fas fa-redo"></i> 重置密码</button>
+                </form>
+            </details>
+            <hr>
+            <form method="post" action="/vms/{{ vm.id }}/delete" onsubmit="return confirm('确认永久删除该云主机?此操作不可恢复!')">
+                <button class="btn btn-danger" style="width:100%;justify-content:center" type="submit"><i class="fas fa-trash"></i> 删除云主机</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

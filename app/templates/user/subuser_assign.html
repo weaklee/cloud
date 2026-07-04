@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}分配虚拟机 - {{ subuser.username }} - cloud{% endblock %}
+{% block page_title %}分配虚拟机给 {{ subuser.username }}{% endblock %}
+{% block content %}
+<div style="margin-bottom:20px"><a href="/subusers" class="btn btn-sm"><i class="fas fa-arrow-left"></i> 返回子账号列表</a></div>
+<div class="level">
+    <div><h1 class="title">分配虚拟机</h1><p class="subtitle">为子账号 <strong>{{ subuser.username }}</strong> 分配可管理的虚拟机</p></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap"><table>
+        <thead><tr><th>ID</th><th>名称</th><th>状态</th><th>配置</th><th>宿主服务器</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for vm in my_vms %}
+        <tr>
+            <td>{{ vm.id }}</td>
+            <td><strong>{{ vm.name }}</strong></td>
+            <td>{{ status_badge(vm.status) }}</td>
+            <td style="font-size:13px">{{ vm.cpus }}核 / {{ vm.memory_mb }}MB / {{ vm.disk_gb }}GB</td>
+            <td>{{ vm.server.name if vm.server else '-' }}</td>
+            <td>
+                {% if vm.id in assigned_ids %}
+                <form method="post" action="/subusers/{{ subuser.id }}/unassign/{{ vm.id }}" style="display:inline" onsubmit="return confirm('确认取消分配该虚拟机?')"><button class="btn btn-danger btn-sm"><i class="fas fa-unlink"></i> 取消分配</button></form>
+                {% else %}
+                <form method="post" action="/subusers/{{ subuser.id }}/assign/{{ vm.id }}" style="display:inline"><button class="btn btn-ok btn-sm"><i class="fas fa-link"></i> 分配</button></form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty"><i class="fas fa-server"></i> 你还没有虚拟机，无法分配</div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

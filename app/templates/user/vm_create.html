@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}创建云主机 - cloud{% endblock %}
+{% block page_title %}创建云主机{% endblock %}
+{% block content %}
+<div class="level"><div><h1 class="title">创建云主机</h1><p class="subtitle">选择宿主服务器并配置规格</p></div><a href="/vms" class="btn"><i class="fas fa-arrow-left"></i> 返回</a></div>
+<div class="columns">
+    <div class="column is-8">
+        <div class="card">
+            <form method="post" action="/vms/create" id="createForm">
+                <div class="field"><label class="label">主机名称</label><input class="input" type="text" name="name" placeholder="例如:web-server-01" required></div>
+                <div class="field">
+                    <label class="label">虚拟化类型</label>
+                    <div class="select" style="width:100%">
+                        <select name="vm_type" id="vmTypeSelect" style="width:100%" required>
+                            <option value="cloud-hypervisor">Cloud Hypervisor (KVM 虚拟机)</option>
+                            <option value="incus">Incus (系统容器)</option>
+                        </select>
+                    </div>
+                    <p class="help">Cloud Hypervisor 为完整 KVM 虚拟机,性能更好;Incus 为系统容器,启动更快,资源占用更少</p>
+                </div>
+                <div class="field">
+                    <label class="label">宿主服务器</label>
+                    <div class="select" style="width:100%">
+                        <select name="server_id" id="serverSelect" style="width:100%" required>
+                            <option value="">请选择服务器...</option>
+                            {% for s in servers %}
+                            {% set det = server_details.get(s.id, {}) %}
+                            <option value="{{ s.id }}" data-has-incus="{{ 'yes' if det.get('has_incus') == 'yes' else 'no' }}" data-has-ch="{{ 'yes' if det.get('has_cloud_ctl') == 'yes' else 'no' }}">{{ s.name }} ({{ s.host }}){{ ' · 在线' if s.status.value == 'online' else ' · ' ~ s.status.value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% if not servers %}<p class="help" style="color:var(--danger)"><i class="fas fa-exclamation-triangle"></i> 暂无可用服务器,请联系管理员添加并检测服务器。</p>{% endif %}
+                </div>
+                <div id="incusWarning" style="display:none" class="help" style="color:var(--warn);margin-bottom:12px">
+                    <i class="fas fa-exclamation-triangle"></i> 所选服务器未安装 Incus,请联系管理员在服务器上运行 <code>apt install incus</code>
+                </div>
+                <div id="ipv6Section" style="display:none" class="field">
+                    <label class="label">IPv6 地址</label>
+                    <div class="columns" style="gap:8px;align-items:flex-end">
+                        <div class="column" style="flex:1;padding:0">
+                            <div class="select" style="width:100%">
+                                <select name="ipv6" id="ipv6Select" style="width:100%">
+                                    <option value="">不分配 IPv6</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="flex:0 0 auto;padding-bottom:2px">
+                            <button type="button" class="btn btn-info btn-sm" id="refreshIpv6"><i class="fas fa-sync"></i> 刷新</button>
+                        </div>
+                    </div>
+                    <p class="help">选择一个宿主机的 IPv6 地址分配给虚拟机,仅 Incus 类型支持</p>
+                </div>
+                <div class="columns">
+                    <div class="column is-4"><div class="field"><label class="label">CPU 核数</label><input class="input" type="number" name="cpus" value="1" min="1" max="32"></div></div>
+                    <div class="column is-4"><div class="field"><label class="label">内存 (MB)</label><input class="input" type="number" name="memory_mb" value="512" min="128" step="128"></div></div>
+                    <div class="column is-4"><div class="field"><label class="label">磁盘 (GB)</label><input class="input" type="number" name="disk_gb" value="5" min="1"></div></div>
+                </div>
+                <div class="field">
+                    <label class="label">操作系统镜像</label>
+                    <div class="select" style="width:100%">
+                        <select name="os_image" id="osImageSelect" style="width:100%">
+                            <optgroup label="Cloud Hypervisor" id="chImages">
+                                <option value="debian-12">Debian 12</option>
+                                <option value="ubuntu-24">Ubuntu 24.04 LTS</option>
+                                <option value="almalinux-9">AlmaLinux 9</option>
+                                <option value="rocky-9">Rocky Linux 9</option>
+                            </optgroup>
+                            <optgroup label="Incus" id="incusImages">
+                                <option value="images:debian/12">Debian 12</option>
+                                <option value="images:ubuntu/24.04">Ubuntu 24.04</option>
+                                <option value="images:almalinux/9">AlmaLinux 9</option>
+                                <option value="images:rockylinux/9">Rocky Linux 9</option>
+                                <option value="images:alpine/3.19">Alpine 3.19</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                <hr>
+                <button class="btn btn-primary" type="submit"><i class="fas fa-plus"></i> 立即创建</button>
+                <a href="/vms" class="btn">取消</a>
+            </form>
+        </div>
+    </div>
+    <div class="column is-4">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-info-circle" style="color:var(--primary)"></i> 配置说明</div>
+            <p style="color:var(--muted);font-size:13px;line-height:1.8">
+            · CPU 核数决定计算能力,建议 1-4 核<br>
+            · 内存最低 128MB,推荐 512MB 起<br>
+            · 磁盘为系统盘大小,创建后不可缩小<br>
+            · 主机创建后默认处于「已停止」状态,需手动启动<br>
+            · 实际可用规格取决于宿主服务器资源
+            </p>
+        </div>
+        <div class="card">
+            <div class="card-title"><i class="fas fa-question-circle" style="color:var(--primary)"></i> 虚拟化类型</div>
+            <p style="color:var(--muted);font-size:13px;line-height:1.8">
+            <strong>Cloud Hypervisor</strong><br>
+            · 完整 KVM 虚拟机<br>
+            · 独立内核,完全隔离<br>
+            · 支持热迁移<br><br>
+            <strong>Incus</strong><br>
+            · 系统级容器(类似 LXD)<br>
+            · 共享宿主内核,启动更快<br>
+            · 资源占用更少<br>
+            · 支持 IPv6 地址分配
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const serverDetails = {{ server_details | tojson }};
+const serverSelect = document.getElementById('serverSelect');
+const vmTypeSelect = document.getElementById('vmTypeSelect');
+const ipv6Section = document.getElementById('ipv6Section');
+const ipv6Select = document.getElementById('ipv6Select');
+const incusWarning = document.getElementById('incusWarning');
+const chImages = document.getElementById('chImages');
+const incusImages = document.getElementById('incusImages');
+
+function updateForm() {
+    const serverId = serverSelect.value;
+    const vmType = vmTypeSelect.value;
+    const det = serverDetails[serverId] || {};
+    if (vmType === 'incus') {
+        ipv6Section.style.display = '';
+        chImages.style.display = 'none';
+        incusImages.style.display = '';
+        incusWarning.style.display = det.has_incus === 'yes' ? 'none' : '';
+    } else {
+        ipv6Section.style.display = 'none';
+        chImages.style.display = '';
+        incusImages.style.display = 'none';
+        incusWarning.style.display = 'none';
+    }
+}
+
+function loadIpv6() {
+    const serverId = serverSelect.value;
+    if (!serverId) return;
+    ipv6Select.innerHTML = '<option value="">加载中...</option>';
+    fetch('/api/server/' + serverId + '/ipv6')
+        .then(r => r.json())
+        .then(data => {
+            ipv6Select.innerHTML = '<option value="">不分配 IPv6</option>';
+            (data.addresses || []).forEach(addr => {
+                const opt = document.createElement('option');
+                opt.value = addr;
+                opt.textContent = addr;
+                ipv6Select.appendChild(opt);
+            });
+        })
+        .catch(() => { ipv6Select.innerHTML = '<option value="">获取失败</option>'; });
+}
+
+vmTypeSelect.addEventListener('change', updateForm);
+serverSelect.addEventListener('change', () => { updateForm(); loadIpv6(); });
+document.getElementById('refreshIpv6').addEventListener('click', loadIpv6);
+updateForm();
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录 - cloud 云主机管理面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+        body{min-height:100vh;display:flex;align-items:center;justify-content:center;
+            background:linear-gradient(135deg,#eef2ff 0%,#f4f6fb 45%,#e0e7ff 100%);color:#1f2937;overflow:hidden;position:relative}
+        body::before,body::after{content:"";position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+        body::before{width:380px;height:380px;background:rgba(79,124,255,.25);top:-100px;left:-80px}
+        body::after{width:320px;height:320px;background:rgba(168,85,247,.18);bottom:-100px;right:-60px}
+        .card{position:relative;z-index:1;width:380px;max-width:90%;background:rgba(255,255,255,.9);
+            backdrop-filter:blur(14px);border:1px solid rgba(79,124,255,.12);border-radius:18px;padding:40px 34px;
+            box-shadow:0 20px 50px rgba(15,23,42,.1)}
+        .logo{width:64px;height:64px;margin:0 auto 18px;border-radius:18px;
+            background:linear-gradient(135deg,#4f7cff,#7b5cff);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(79,124,255,.35)}
+        h1{text-align:center;font-size:22px;font-weight:700;letter-spacing:.5px;color:#1f2937}
+        .sub{text-align:center;color:#6b7280;font-size:13px;margin:6px 0 28px}
+        .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:#dc2626;
+            padding:11px 14px;border-radius:9px;font-size:13px;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+        .field{margin-bottom:18px}
+        label{display:block;color:#6b7280;font-size:13px;margin-bottom:7px}
+        .input-wrap{position:relative}
+        .input-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px}
+        input{width:100%;background:#fff;border:1px solid #e3e8f0;border-radius:10px;
+            color:#1f2937;padding:12px 14px 12px 40px;font-size:14px;transition:.15s}
+        input:focus{outline:none;border-color:#4f7cff;box-shadow:0 0 0 3px rgba(79,124,255,.15)}
+        .btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+            background:linear-gradient(135deg,#4f7cff,#6b8cff);color:#fff;transition:.2s;letter-spacing:2px}
+        .btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(79,124,255,.35)}
+        .hint{text-align:center;color:#9ca3af;font-size:12px;margin-top:22px}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo"><i class="fas fa-cloud"></i></div>
+        <h1>cloud</h1>
+        <p class="sub">云主机管理面板</p>
+        {% if error %}
+        <div class="err"><i class="fas fa-exclamation-triangle"></i> {{ error }}</div>
+        {% endif %}
+        <form method="post" action="/login">
+            <div class="field">
+                <label>用户名</label>
+                <div class="input-wrap"><i class="fas fa-user"></i><input type="text" name="username" placeholder="请输入用户名" required autofocus></div>
+            </div>
+            <div class="field">
+                <label>密码</label>
+                <div class="input-wrap"><i class="fas fa-lock"></i><input type="password" name="password" placeholder="请输入密码" required></div>
+            </div>
+            <button class="btn" type="submit"><i class="fas fa-sign-in-alt"></i> 登 录</button>
+        </form>
+        <p class="hint">默认账号 admin / admin123(首次使用请执行 python seed.py)</p>
+    </div>
+</body>
+</html>

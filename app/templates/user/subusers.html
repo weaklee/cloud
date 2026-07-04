@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}子账号管理 - cloud{% endblock %}
+{% block page_title %}子账号管理{% endblock %}
+{% block content %}
+<div class="level">
+    <div><h1 class="title">子账号管理</h1><p class="subtitle">共 {{ subusers|length }} 个子账号</p></div>
+    <button class="btn btn-primary" onclick="openModal('createModal')"><i class="fas fa-plus"></i> 创建子账号</button>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+    <div class="tbl-wrap"><table>
+        <thead><tr><th>ID</th><th>用户名</th><th>分配虚拟机</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody>
+        {% for s in subusers %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td><strong>{{ s.username }}</strong></td>
+            <td>{{ s.vm_assignments|length }}</td>
+            <td>{% if s.is_active %}<span class="tag tag-ok">启用</span>{% else %}<span class="tag tag-off">禁用</span>{% endif %}</td>
+            <td>{{ s.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <a href="/subusers/{{ s.id }}/assign" class="btn btn-info btn-sm"><i class="fas fa-link"></i> 分配虚拟机</a>
+                <form method="post" action="/subusers/{{ s.id }}/toggle" style="display:inline"><button class="btn btn-sm {{ 'btn-warn' if s.is_active else 'btn-ok' }}">{{ '禁用' if s.is_active else '启用' }}</button></form>
+                <button class="btn btn-info btn-sm" onclick="resetPwd({{ s.id }})"><i class="fas fa-key"></i> 重置密码</button>
+                <form method="post" action="/subusers/{{ s.id }}/delete" style="display:inline" onsubmit="return confirm('确认删除子账号 {{ s.username }}?')"><button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button></form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty"><i class="fas fa-users"></i> 暂无子账号，点击上方按钮创建</div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<div class="modal" id="createModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head"><p class="modal-card-title">创建子账号</p><button class="delete"></button></header>
+        <form method="post" action="/subusers/create">
+            <section class="modal-card-body">
+                <div class="field"><label class="label">用户名</label><input class="input" name="username" required></div>
+                <div class="field"><label class="label">密码</label><input class="input" type="password" name="password" required><p class="help">至少 6 位</p></div>
+            </section>
+            <footer class="modal-card-foot"><button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> 创建</button><button class="btn" type="button" onclick="closeModal('createModal')">取消</button></footer>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="pwdModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head"><p class="modal-card-title">重置密码</p><button class="delete"></button></header>
+        <form method="post" id="pwdForm">
+            <section class="modal-card-body"><div class="field"><label class="label">新密码</label><input class="input" type="password" name="password" required><p class="help">至少 6 位</p></div></section>
+            <footer class="modal-card-foot"><button class="btn btn-primary" type="submit"><i class="fas fa-check"></i> 重置</button><button class="btn" type="button" onclick="closeModal('pwdModal')">取消</button></footer>
+        </form>
+    </div>
+</div>
+<script>function resetPwd(id){document.getElementById('pwdForm').action='/subusers/'+id+'/reset-password';openModal('pwdModal');}</script>
+{% endblock %}
